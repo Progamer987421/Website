@@ -144,19 +144,6 @@
   </div>
 
   <div class="panel">
-    <h2>Custom Accounts</h2>
-    <label>Username (your cracked account)</label>
-    <input id="caUser" placeholder="YourUsername">
-    <label>Password</label>
-    <input id="caPass" type="password" placeholder="YourPassword">
-    <div class="btn-row" style="margin-bottom:10px;">
-      <button onclick="addCustomAccount()">➕ Add Account</button>
-    </div>
-    <div id="caResult" style="font-size:0.72rem;color:#4caf50;min-height:16px;"></div>
-    <div id="caList" style="margin-top:10px;"></div>
-  </div>
-
-  <div class="panel">
     <h2>Bot Commands</h2>
     <label>Target bot username</label>
     <input id="cmdTarget" placeholder="Bot username (or click row below)">
@@ -453,7 +440,6 @@ async function refresh() {
     '</tr>';
   }).join('');
 
-  renderCustomAccounts(accounts);
   loadProxyStats();
   const logId=document.getElementById('logId').value.trim();
   if (logId) fetchLogs(logId);
@@ -461,58 +447,6 @@ async function refresh() {
 
 function selectBot(id) {
   ['cmdTarget','captchaTarget','chatId','logId'].forEach(f=>document.getElementById(f).value=id);
-}
-
-// ── Custom accounts ──────────────────────────────────────────────
-async function addCustomAccount() {
-  const user = document.getElementById('caUser').value.trim();
-  const pass = document.getElementById('caPass').value.trim();
-  if (!user) return showCAResult('Enter a username', true);
-  const d = await fetch('/account/add', {
-    method:'POST', headers:H(), body:JSON.stringify({username:user, password:pass})
-  }).then(r=>r.json());
-  if (d.error) return showCAResult('✗ '+d.error, true);
-  showCAResult('✔ Added: '+user, false);
-  document.getElementById('caUser').value='';
-  document.getElementById('caPass').value='';
-  refresh();
-}
-
-async function connectCustom(id) {
-  const d = await fetch('/account/'+encodeURIComponent(id)+'/connect', {
-    method:'POST', headers:H()
-  }).then(r=>r.json());
-  if (d.error) alert(d.error);
-  refresh();
-}
-
-async function removeCustom(id) {
-  if (!confirm('Remove '+id+'?')) return;
-  await fetch('/account/'+encodeURIComponent(id), {method:'DELETE', headers:H()});
-  refresh();
-}
-
-function showCAResult(msg, err) {
-  const e = document.getElementById('caResult');
-  e.textContent = msg; e.style.color = err ? '#ef5350' : '#4caf50';
-  setTimeout(()=>{ e.textContent=''; }, 4000);
-}
-
-function renderCustomAccounts(accounts) {
-  const customs = accounts.filter(a => a.custom);
-  const el = document.getElementById('caList');
-  if (!customs.length) { el.innerHTML='<div style="font-size:0.72rem;color:#333;">No custom accounts added yet.</div>'; return; }
-  el.innerHTML = customs.map(a => {
-    const dc = dotCls(a.status);
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #151515;">'+
-      '<span class="dot '+dc+'"></span>'+
-      '<span style="color:#b2dfdb;font-size:0.8rem;flex:1;">'+a.username+'</span>'+
-      '<span style="color:#444;font-size:0.7rem;margin-right:4px;">'+a.status+'</span>'+
-      '<button class="sm blue" onclick="connectCustom(''+a.id+'')">▶ Connect</button>'+
-      '<button class="sm sec"  onclick="selectBot(''+a.id+'')">Cmd</button>'+
-      '<button class="sm danger" onclick="removeCustom(''+a.id+'')">✕</button>'+
-    '</div>';
-  }).join('');
 }
 
 setInterval(refresh,6000);
